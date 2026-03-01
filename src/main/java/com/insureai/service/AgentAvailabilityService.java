@@ -21,4 +21,14 @@ public class AgentAvailabilityService {
     public List<AgentAvailability> getAllAvailability() {
         return repository.findAll();
     }
+
+    public AgentAvailability findBestAgent(String expertise, String location) {
+
+    return repository
+            .findByExpertiseAndLocationAndStatus(expertise, location, "AVAILABLE")
+            .stream()
+            .findFirst()
+            .orElse(null);
+}
+
 }

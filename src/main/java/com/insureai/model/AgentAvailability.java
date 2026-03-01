@@ -20,5 +20,11 @@ public class AgentAvailability {
 
     private String timeSlot;
 
-    private String status; // AVAILABLE or BOOKED
+    private String status;
+
+    private String expertise;
+    
+    private String location;
+    // Aprivate String expertise;
+
 }

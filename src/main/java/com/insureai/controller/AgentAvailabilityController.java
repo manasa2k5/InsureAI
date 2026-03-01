@@ -24,4 +24,13 @@ public class AgentAvailabilityController {
     public List<AgentAvailability> getAllAvailability() {
         return service.getAllAvailability();
     }
+
+    @GetMapping("/match")
+public AgentAvailability matchAgent(
+        @RequestParam String expertise,
+        @RequestParam String location
+) {
+    return service.findBestAgent(expertise, location);
+}
+
 }
