@@ -17,4 +17,12 @@ public class AppointmentController {
     public Appointment bookAppointment(@RequestBody Appointment appointment) {
         return service.bookAppointment(appointment);
     }
+
+    @PutMapping("/updateStatus")
+public Appointment updateStatus(
+        @RequestParam Long appointmentId,
+        @RequestParam String status
+) {
+    return service.updateStatus(appointmentId, status);
+}
 }

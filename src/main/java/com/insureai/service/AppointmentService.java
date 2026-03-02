@@ -35,4 +35,31 @@ public class AppointmentService {
 
         return savedAppointment;
     }
+
+    public Appointment updateStatus(Long appointmentId, String status){
+
+    Appointment appointment = appointmentRepository.findById(appointmentId).orElse(null);
+
+    if(appointment == null){
+        return null;
+    }
+
+    appointment.setStatus(status);
+    Appointment updated = appointmentRepository.save(appointment);
+
+    // If cancelled → make slot AVAILABLE again
+    if(status.equals("CANCELLED")){
+        availabilityRepository.findAll().forEach(slot -> {
+            if(slot.getAgentId().equals(appointment.getAgentId()) &&
+               slot.getDate().equals(appointment.getDate()) &&
+               slot.getTimeSlot().equals(appointment.getTimeSlot())) {
+
+                slot.setStatus("AVAILABLE");
+                availabilityRepository.save(slot);
+            }
+        });
+    }
+
+    return updated;
+}
 }
