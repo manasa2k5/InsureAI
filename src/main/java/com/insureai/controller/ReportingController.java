@@ -15,7 +15,7 @@ public class ReportingController {
     private ReportingService service;
 
     @GetMapping("/stats")
-    public Map<String, Long> getStats(){
+    public Map<String, Object> getStats(){
         return service.getAppointmentStats();
     }
 }

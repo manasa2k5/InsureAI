@@ -2,6 +2,7 @@ package com.insureai.service;
 
 import com.insureai.model.AgentAvailability;
 import com.insureai.model.Appointment;
+import com.insureai.security.AppUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ public class AutoBookingService {
     @Autowired
     private AppointmentService appointmentService;
 
-    public Appointment autoBook(Long customerId, String expertise, String location) {
+    public Appointment autoBook(Long customerId, String expertise, String location, AppUserDetails user) {
 
         // Find best available agent
         AgentAvailability bestSlot = availabilityService.findBestAgent(expertise, location);
@@ -30,6 +31,6 @@ public class AutoBookingService {
         appointment.setDate(bestSlot.getDate());
         appointment.setTimeSlot(bestSlot.getTimeSlot());
 
-        return appointmentService.bookAppointment(appointment);
+        return appointmentService.bookAppointment(appointment, user);
     }
 }

@@ -1,35 +1,74 @@
 package com.insureai.controller;
 
 import com.insureai.model.User;
-import com.insureai.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.insureai.repository.UserRepository;
+import com.insureai.security.AppUserDetails;
+import com.insureai.security.JwtTokenProvider;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @PostMapping("/register")
-    public User register(@RequestBody User user) {
-        return userService.register(user);
+    public AuthController(AuthenticationManager authenticationManager,
+                          JwtTokenProvider tokenProvider,
+                          UserRepository userRepository,
+                          PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody User user) {
-        Optional<User> loggedUser =
-                userService.login(user.getEmail(), user.getPassword());
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-        if (loggedUser.isPresent()) {
-            return "Login successful";
-        } else {
-            return "Invalid credentials";
-        }
+        String token = tokenProvider.generateToken(authentication);
+        AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "type", "Bearer",
+                "expiresIn", tokenProvider.getExpirationMs(),
+                "userId", userDetails.getId(),
+                "email", userDetails.getUsername(),
+                "roles", userDetails.getAuthorities()
+        ));
     }
+@PostMapping("/register")
+public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+
+    // Check if email already exists
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        return ResponseEntity.badRequest().body("Email already registered");
+    }
+
+    User user = new User();
+    user.setName(request.getName());
+    user.setEmail(request.getEmail());
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
+    user.setRole(request.getRole());
+
+    userRepository.save(user);
+
+    return ResponseEntity.ok("User registered successfully");
+}
 }
 

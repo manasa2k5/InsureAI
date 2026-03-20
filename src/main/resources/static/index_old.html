@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>InsureAI Dashboard</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-800 text-slate-100">
+
+<div class="min-h-screen flex">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 lg:w-64 bg-slate-950/70 backdrop-blur-xl border-r border-white/10 p-6 hidden md:block">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-semibold tracking-tight">InsureAI</h1>
+                    <p class="text-xs text-slate-300">Insurance management platform</p>
+                </div>
+            </div>
+
+            <nav class="space-y-1" aria-label="Primary">
+                <button type="button" data-section="dashboard" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800/80">Dashboard</button>
+                <button type="button" data-section="match" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800/80">Agent Match</button>
+                <button type="button" data-section="booking" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800/80">Book Appointment</button>
+                <button type="button" data-section="history" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800/80">Appointment History</button>
+                <button type="button" data-section="policy" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800/80">Policy Recommendation</button>
+                <button type="button" data-section="analytics" class="nav-btn w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800/80">Analytics</button>
+            </nav>
+
+            <div class="pt-6 border-t border-white/10">
+                <p class="text-xs text-slate-400">Need help?</p>
+                <p class="text-xs text-slate-300">Check your API logs or contact support.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Top Bar -->
+    <div class="md:hidden w-full bg-slate-950/70 backdrop-blur-xl border-b border-white/10 px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button id="mobileNavToggle" type="button" class="p-2 rounded-lg bg-white/10 hover:bg-white/20">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-slate-100">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <div>
+                <h1 class="text-lg font-semibold">InsureAI</h1>
+                <p class="text-xs text-slate-400">Management dashboard</p>
+            </div>
+        </div>
+        <button id="mobileRefresh" class="px-4 py-2 rounded-lg bg-indigo-500/80 text-sm font-medium hover:bg-indigo-500">Refresh</button>
+    </div>
+
+    <!-- Main content -->
+    <main class="flex-1 overflow-auto scrollbar-thin">
+        <div class="max-w-6xl mx-auto p-6">
+
+            <!-- Header -->
+            <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-3xl font-semibold tracking-tight">Welcome back</h2>
+                    <p class="mt-1 text-sm text-slate-400">A quick overview of your insurance operations.</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button id="refreshStats" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/90 text-sm font-semibold hover:bg-indigo-500">
+                        <span>Refresh</span>
+                        <span class="text-slate-200">⟳</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Sections -->
+            <section id="dashboard" class="section mt-8">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <p class="text-sm uppercase tracking-wider text-slate-300">Booked appointments</p>
+                        <p id="bookedCount" class="mt-4 text-4xl font-semibold">–</p>
+                        <p class="mt-2 text-xs text-slate-400">Total appointments currently booked with your agents.</p>
+                    </div>
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <p class="text-sm uppercase tracking-wider text-slate-300">Completed</p>
+                        <p id="completedCount" class="mt-4 text-4xl font-semibold">–</p>
+                        <p class="mt-2 text-xs text-slate-400">Appointments successfully completed.</p>
+                    </div>
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <p class="text-sm uppercase tracking-wider text-slate-300">Cancelled</p>
+                        <p id="cancelledCount" class="mt-4 text-4xl font-semibold">–</p>
+                        <p class="mt-2 text-xs text-slate-400">Appointments that were cancelled.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold">Status Distribution</h3>
+                            <span class="text-xs text-slate-300">Updated live</span>
+                        </div>
+                        <canvas id="statusChart" class="mt-6" height="240"></canvas>
+                    </div>
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold">Quick Actions</h3>
+                            <span class="text-xs text-slate-300">Get started</span>
+                        </div>
+                        <div class="mt-6 grid grid-cols-1 gap-3">
+                            <button type="button" class="action-btn" data-section="booking">Book Appointment</button>
+                            <button type="button" class="action-btn" data-section="match">Find Agent</button>
+                            <button type="button" class="action-btn" data-section="history">View History</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="match" class="section hidden mt-8">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold">Smart Agent Match</h3>
+                        <p class="text-sm text-slate-400 mt-1">Find the best agent for a client request.</p>
+
+                        <div class="mt-6 space-y-4">
+                            <div>
+                                <label class="text-xs text-slate-300">Expertise</label>
+                                <input id="smExpertise" type="text" placeholder="e.g. Property Insurance" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-300">Location</label>
+                                <input id="smLocation" type="text" placeholder="e.g. New York" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            </div>
+                            <button id="findAgent" type="button" class="w-full rounded-xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-400">Find Best Agent</button>
+                        </div>
+                    </div>
+
+                    <div id="matchResultCard" class="bg-white/10 border border-white/10 rounded-2xl p-6 hidden">
+                        <h3 class="text-lg font-semibold">Match Results</h3>
+                        <div class="mt-5 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-300">Agent ID</span>
+                                <span id="matchAgentId" class="text-lg font-semibold">–</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-300">Score</span>
+                                <span id="matchScore" class="text-lg font-semibold">–</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-300">Expertise</span>
+                                <span id="matchExpertise" class="text-lg font-semibold">–</span>
+                            </div>
+                        </div>
+                        <button id="bookMatchedAgent" type="button" class="mt-6 w-full rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-400">Book this agent</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="booking" class="section hidden mt-8">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold">Book an Appointment</h3>
+                        <p class="text-sm text-slate-400 mt-1">Create a new appointment quickly.</p>
+
+                        <div class="mt-6 space-y-4">
+                            <div>
+                                <label class="text-xs text-slate-300">Customer ID</label>
+                                <input id="custId" type="number" placeholder="Enter customer ID" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-300">Agent ID</label>
+                                <input id="agentId" type="number" placeholder="Agent ID (optional)" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            </div>
+                            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                <div>
+                                    <label class="text-xs text-slate-300">Date</label>
+                                    <input id="appointmentDate" type="date" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-300">Time slot</label>
+                                    <select id="timeSlot" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        <option value="9AM">9:00 AM</option>
+                                        <option value="10AM">10:00 AM</option>
+                                        <option value="11AM">11:00 AM</option>
+                                        <option value="1PM">1:00 PM</option>
+                                        <option value="2PM">2:00 PM</option>
+                                        <option value="3PM">3:00 PM</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button id="bookAppointment" type="button" class="w-full rounded-xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-400">Book Appointment</button>
+                        </div>
+                        <p id="bookingResult" class="mt-4 text-sm text-emerald-300"></p>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/5 rounded-2xl p-6 text-sm text-slate-300">
+                        <h3 class="text-lg font-semibold">Booking tips</h3>
+                        <ul class="mt-4 space-y-2 list-disc list-inside">
+                            <li>Leave <span class="text-slate-100">Agent ID</span> blank to use your default agent.</li>
+                            <li>Use the <span class="text-slate-100">Agent Match</span> section to find the best available agent.</li>
+                            <li>Appointments are updated instantly in your history.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="history" class="section hidden mt-8">
+                <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold">Appointment History</h3>
+                            <p class="text-sm text-slate-400 mt-1">Review, cancel, or reschedule your past appointments.</p>
+                        </div>
+                        <button id="refreshHistory" type="button" class="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-400">Refresh</button>
+                    </div>
+
+                    <div class="mt-6 overflow-auto">
+                        <table class="min-w-full text-left text-sm">
+                            <thead class="border-b border-white/10 text-slate-300">
+                                <tr>
+                                    <th class="px-4 py-3">Agent</th>
+                                    <th class="px-4 py-3">Date</th>
+                                    <th class="px-4 py-3">Time</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTable" class="divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+
+                    <p id="historyEmpty" class="mt-6 text-center text-sm text-slate-400 hidden">No appointments found yet. Book one to see it here.</p>
+                </div>
+            </section>
+
+            <section id="policy" class="section hidden mt-8">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold">Policy Recommendation</h3>
+                        <p class="text-sm text-slate-400 mt-1">Help customers choose the best policy based on their profile.</p>
+
+                        <div class="mt-6 space-y-4">
+                            <div>
+                                <label class="text-xs text-slate-300">Age</label>
+                                <input id="age" type="number" min="18" placeholder="Customer age" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-300">Annual Income</label>
+                                <input id="income" type="number" min="0" placeholder="e.g. 55000" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-300">Risk Level</label>
+                                <select id="risk" class="mt-2 w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="LOW">Low</option>
+                                    <option value="MEDIUM">Medium</option>
+                                    <option value="HIGH">High</option>
+                                </select>
+                            </div>
+
+                            <button id="recommendPolicy" type="button" class="w-full rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-400">Get Recommendation</button>
+                        </div>
+
+                        <div id="policyResult" class="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100 hidden">
+                            <p class="text-slate-300 text-xs">Suggested plan</p>
+                            <p id="policyType" class="mt-2 text-lg font-semibold">–</p>
+                            <p id="policyRec" class="mt-1 text-slate-300">–</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/5 rounded-2xl p-6 text-sm text-slate-300">
+                        <h3 class="text-lg font-semibold">Why this matters</h3>
+                        <p class="mt-4">A tailored policy recommendation helps you reduce risk and raise customer satisfaction. Use the inputs above to model customer profiles and deliver consistent advice.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="analytics" class="section hidden mt-8">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold">Appointment Status</h3>
+                                <p class="text-sm text-slate-400 mt-1">Booked vs completed vs cancelled.</p>
+                            </div>
+                            <span class="text-xs text-slate-300">Updated just now</span>
+                        </div>
+                        <canvas id="statusChart" class="mt-6" height="240"></canvas>
+                    </div>
+
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold">Agent Utilization</h3>
+                                <p class="text-sm text-slate-400 mt-1">Appointments per agent (higher means busier).</p>
+                            </div>
+                            <span class="text-xs text-slate-300">Based on all appointments</span>
+                        </div>
+                        <canvas id="utilizationChart" class="mt-6" height="240"></canvas>
+                    </div>
+
+                    <div class="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold">Insights</h3>
+                        <p class="text-sm text-slate-400 mt-1">See trends and performance indicators.</p>
+                        <ul class="mt-6 space-y-3 text-sm text-slate-300">
+                            <li>✔ Booked vs completed appointments</li>
+                            <li>✔ Track cancellations over time</li>
+                            <li>✔ Agent workload at a glance</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+
+<script src="/app.js"></script>
+</body>
+</html>

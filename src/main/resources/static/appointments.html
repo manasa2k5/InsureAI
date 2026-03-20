@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureAI - Appointments</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="flex">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">InsureAI</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="match.html" class="nav-link">Agent Match</a>
+            <a href="appointments.html" class="nav-link active">Appointments</a>
+            <a href="policy.html" class="nav-link">Policy</a>
+            <button id="logoutBtn" class="nav-button">Logout</button>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h2 class="page-title">Appointments</h2>
+
+        <!-- Book Appointment Form -->
+        <div class="card">
+            <h3 class="card-title">Book New Appointment</h3>
+            <form id="bookForm" class="space-y-4">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="agentId" class="form-label">Agent ID</label>
+                        <input type="number" id="agentId" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentDate" class="form-label">Date</label>
+                        <input type="date" id="appointmentDate" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="timeSlot" class="form-label">Time Slot</label>
+                        <input type="text" id="timeSlot" class="form-input" placeholder="e.g., 10AM" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Book Appointment</button>
+            </form>
+        </div>
+
+        <!-- Auto Booking Form -->
+        <div class="card">
+            <h3 class="card-title">Auto Booking</h3>
+            <form id="autoBookForm" class="space-y-4">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="autoCustomerId" class="form-label">Customer ID</label>
+                        <input type="number" id="autoCustomerId" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="autoExpertise" class="form-label">Expertise</label>
+                        <input type="text" id="autoExpertise" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="autoLocation" class="form-label">Location</label>
+                        <input type="text" id="autoLocation" class="form-input" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Auto Book</button>
+            </form>
+        </div>
+
+        <!-- Auto Booking Stats -->
+        <div class="card">
+            <h3 class="card-title">Appointment Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card booked">
+                    <p class="stat-label">Total Booked</p>
+                    <p id="autoBookedCount" class="stat-value">–</p>
+                </div>
+                <div class="stat-card completed">
+                    <p class="stat-label">Completed</p>
+                    <p id="autoCompletedCount" class="stat-value">–</p>
+                </div>
+                <div class="stat-card cancelled">
+                    <p class="stat-label">Cancelled</p>
+                    <p id="autoCancelledCount" class="stat-value">–</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment History -->
+        <div class="card">
+            <h3 class="card-title">Your Appointments</h3>
+            <div id="appointments-list">
+                <!-- Appointments will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        // Load appointments
+        async function loadAppointments() {
+            try {
+                showLoading('appointments-list');
+                const appointments = await apiRequest('/api/appointments');
+
+                let html = '<table class="table"><thead><tr><th>Date</th><th>Time Slot</th><th>Agent ID</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+                if (appointments && appointments.length > 0) {
+                    appointments.forEach(a => {
+                        const isCompleted = a.status === 'COMPLETED';
+                        const isCancelled = a.status === 'CANCELLED';
+                        const isBooked = a.status === 'BOOKED';
+                        const disabled = isCompleted || isCancelled ? 'disabled' : '';
+                        html += `
+                            <tr>
+                                <td>${a.date || 'N/A'}</td>
+                                <td>${a.timeSlot || 'N/A'}</td>
+                                <td>${a.agentId ?? 'N/A'}</td>
+                                <td>${a.status || 'PENDING'}</td>
+                                <td>
+                                    <button class="btn btn-success" onclick="completeAppointment(${a.id})" ${disabled} style="margin-right: 0.5rem;">Complete</button>
+                                    <button class="btn" style="background-color: #ef4444; color: white;" onclick="cancelAppointment(${a.id})" ${disabled}>Cancel</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    html += '<tr><td colspan="5" style="text-align: center;">No appointments found.</td></tr>';
+                }
+
+                html += '</tbody></table>';
+                document.getElementById('appointments-list').innerHTML = html;
+            } catch (error) {
+                showError('Failed to load appointments: ' + error.message);
+                document.getElementById('appointments-list').innerHTML = '<p style="color: #ef4444;">Error loading appointments</p>';
+            }
+        }
+
+        // Book appointment handler
+        document.getElementById('bookForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const agentId = document.getElementById('agentId').value;
+            const date = document.getElementById('appointmentDate').value;
+            const timeSlot = document.getElementById('timeSlot').value;
+
+            if (!agentId || !date || !timeSlot) {
+                showError('Please fill in all booking fields.');
+                return;
+            }
+
+            try {
+                await bookAppointment({ agentId, date, timeSlot });
+                showSuccess('Appointment booked successfully!');
+                document.getElementById('bookForm').reset();
+                loadAppointments();
+            } catch (error) {
+                showError('Failed to book appointment: ' + (error?.message || 'Unknown error'));
+            }
+        });
+
+        // Auto book handler
+        document.getElementById('autoBookForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const customerId = document.getElementById('autoCustomerId').value;
+            const expertise = document.getElementById('autoExpertise').value;
+            const location = document.getElementById('autoLocation').value;
+
+            try {
+                await autoBook(customerId, expertise, location);
+                showSuccess('Auto booking completed!');
+                document.getElementById('autoBookForm').reset();
+                loadAppointments();
+            } catch (error) {
+                showError('Auto booking failed: ' + error.message);
+            }
+        });
+
+        // Update status function
+        async function updateStatus(appointmentId, status) {
+            try {
+                await apiRequest(`/api/appointments/updateStatus?appointmentId=${encodeURIComponent(appointmentId)}&status=${encodeURIComponent(status)}`, {
+                    method: 'PUT'
+                });
+                showSuccess('Appointment status updated!');
+                loadAppointments();
+            } catch (error) {
+                showError('Failed to update status: ' + (error?.message || 'Unknown error'));
+            }
+        }
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            logout();
+        });
+
+        // Helper to read query params
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+
+            // If we were redirected from Match, prefill agent id
+            const agentId = getQueryParam('agentId');
+            if (agentId) {
+                const agentInput = document.getElementById('agentId');
+                if (agentInput) {
+                    agentInput.value = agentId;
+                }
+            }
+
+            loadAppointments();
+        });
+    </script>
+</body>
+</html>

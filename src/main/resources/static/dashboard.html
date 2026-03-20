@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureAI Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="flex">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">InsureAI</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link active">Dashboard</a>
+            <a href="match.html" class="nav-link">Agent Match</a>
+            <a href="appointments.html" class="nav-link">Appointments</a>
+            <a href="policy.html" class="nav-link">Policy</a>
+            <button id="logoutBtn" class="nav-button">Logout</button>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h2 class="page-title">Dashboard</h2>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card booked">
+                <p class="stat-label">Booked</p>
+                <p id="bookedCount" class="stat-value">–</p>
+                <p class="stat-desc">Total appointments currently booked.</p>
+            </div>
+            <div class="stat-card completed">
+                <p class="stat-label">Completed</p>
+                <p id="completedCount" class="stat-value">–</p>
+                <p class="stat-desc">Appointments successfully completed.</p>
+            </div>
+            <div class="stat-card cancelled">
+                <p class="stat-label">Cancelled</p>
+                <p id="cancelledCount" class="stat-value">–</p>
+                <p class="stat-desc">Appointments that were cancelled.</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3 class="chart-title">Status Distribution</h3>
+                <canvas id="statusChart" height="240"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Agent Utilization</h3>
+                <canvas id="utilizationChart" height="240"></canvas>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h3 class="card-title">Quick Actions</h3>
+            <div class="flex gap-4">
+                <a href="match.html" class="btn btn-primary">Find Agent</a>
+                <a href="appointments.html" class="btn btn-secondary">View Appointments</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Ensure the global loadStats is the app.js implementation (charts + auth)
+        if (window.__insureai_loadStats) {
+            window.loadStats = window.__insureai_loadStats;
+        }
+
+        // Highlight current navigation item
+        (function() {
+            const current = window.location.pathname.split('/').pop();
+            const activeLink = document.querySelector(`.nav-link[href$="${current}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        })();
+    </script>
+</body>
+</html>

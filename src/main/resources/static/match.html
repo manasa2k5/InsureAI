@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InsureAI - Agent Match</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="flex h-screen">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+<div class="sidebar-header">
+<h1 class="sidebar-title">InsureAI</h1>
+</div>
+
+<nav class="sidebar-nav">
+<li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+<li><a href="match.html" class="nav-link active">Agent Match</a></li>
+<li><a href="appointments.html" class="nav-link">Appointments</a></li>
+<li><a href="policy.html" class="nav-link">Policy</a></li>
+<li><button id="logoutBtn" class="nav-button">Logout</button></li>
+</nav>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content overflow-y-auto">
+
+<h2 class="page-title">Find Your Agent</h2>
+
+<!-- Match Form -->
+<div class="card">
+
+<h3 class="card-title">Search for Agents</h3>
+
+<form id="matchForm" class="space-y-4">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label class="form-label">Expertise</label>
+<input type="text" id="expertise" class="form-input" placeholder="e.g., Auto Insurance" required>
+</div>
+
+<div class="form-group">
+<label class="form-label">Location</label>
+<input type="text" id="location" class="form-input" placeholder="e.g., New York" required>
+</div>
+
+</div>
+
+<button type="submit" class="btn btn-primary">
+Find Agents
+</button>
+
+</form>
+
+</div>
+
+<!-- Match Results -->
+<div id="match-results" class="card hidden">
+
+<h3 class="card-title">Available Agents</h3>
+
+<div id="results-content">
+</div>
+
+</div>
+
+</main>
+
+<script src="app.js"></script>
+
+<script>
+
+document.getElementById('matchForm').addEventListener('submit', async function(e){
+
+e.preventDefault();
+
+const expertise = document.getElementById('expertise').value.trim();
+const location = document.getElementById('location').value.trim();
+
+if(!expertise || !location){
+showError('Please enter expertise and location.');
+return;
+}
+
+try{
+
+showLoading('results-content');
+document.getElementById('match-results').classList.remove('hidden');
+
+const result = await apiRequest(`/api/availability/match?expertise=${encodeURIComponent(expertise)}&location=${encodeURIComponent(location)}`);
+
+if(!result || !result.agentId){
+
+document.getElementById('results-content').innerHTML =
+'<p>No agents found matching your criteria.</p>';
+
+return;
+
+}
+
+const resultsHtml = `
+<div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px">
+
+<h4 style="font-weight:600">Matched Agent</h4>
+
+<p>Agent ID: ${result.agentId}</p>
+<p>Match Score: ${(result.score * 100).toFixed(0)}%?? 'N/A'}</p>
+<p>Expertise: ${expertise}</p>
+
+<a href="appointments.html?agentId=${result.agentId}" class="btn btn-primary" style="margin-top:10px;display:inline-block">
+Book Appointment
+</a>
+
+</div>
+`;
+
+document.getElementById('results-content').innerHTML = resultsHtml;
+
+}catch(error){
+
+showError('Failed to find agents: ' + (error?.message || 'Unknown error'));
+
+document.getElementById('match-results').classList.add('hidden');
+
+}
+
+});
+
+
+document.getElementById('logoutBtn').addEventListener('click', function(){
+logout();
+});
+
+
+document.addEventListener('DOMContentLoaded', function(){
+checkAuth();
+});
+
+</script>
+
+</body>
+</html>

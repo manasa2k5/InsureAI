@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureAI - Policy Recommendations</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">InsureAI</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+            <li><a href="match.html" class="nav-link">Agent Match</a></li>
+            <li><a href="appointments.html" class="nav-link">Appointments</a></li>
+            <li><a href="policy.html" class="nav-link active">Policy</a></li>
+            <li><button id="logoutBtn" class="nav-button">Logout</button></li>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content overflow-y-auto">
+        <h2 class="page-title">Policy Recommendations</h2>
+
+        <!-- Policy Form -->
+        <div class="card">
+            <h3 class="card-title">Get Policy Recommendations</h3>
+            <form id="policyForm" class="space-y-4">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="age" class="form-label">Age</label>
+                        <input type="number" id="age" class="form-input" min="18" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="income" class="form-label">Annual Income ($)</label>
+                        <input type="number" id="income" class="form-input" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="riskLevel" class="form-label">Risk Level</label>
+                        <select id="riskLevel" class="form-input" required>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Get Recommendations</button>
+            </form>
+        </div>
+
+        <!-- Recommendations Results -->
+        <div id="recommendations" class="card hidden">
+            <h3 class="card-title">Recommended Policies</h3>
+            <div id="rec-content">
+                <!-- Recommendations will be loaded here -->
+            </div>
+        </div>
+    </main>
+</body>
+<script src="app.js"></script>
+<script>
+    // Policy form handler
+    document.getElementById('policyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const age = document.getElementById('age').value;
+        const income = document.getElementById('income').value;
+        const riskLevel = document.getElementById('riskLevel').value;
+
+        if (!age || !income || !riskLevel) {
+            showError('Please fill in all fields to get a recommendation.');
+            return;
+        }
+
+        try {
+            showLoading('rec-content');
+            document.getElementById('recommendations').classList.remove('hidden');
+
+            const recommendation = await apiRequest(`/api/policy/recommend?age=${encodeURIComponent(age)}&income=${encodeURIComponent(income)}&riskLevel=${encodeURIComponent(riskLevel)}`);
+
+            const html = `
+                <div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
+                    <h4 style="font-weight: 600;">${recommendation.policyType || 'Policy Recommendation'}</h4>
+                    <p style="font-size: 0.875rem; color: #6b7280;">Risk Level: ${riskLevel}</p>
+                    <p style="font-size: 0.875rem; color: #6b7280;">Recommendation: ${recommendation.recommendation || 'No recommendation returned'}</p>
+                </div>
+            `;
+
+            document.getElementById('rec-content').innerHTML = html;
+        } catch (error) {
+            showError('Failed to get recommendations: ' + (error?.message || 'Unknown error'));
+            document.getElementById('recommendations').classList.add('hidden');
+        }
+    });
+
+    // Logout handler
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        logout();
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+    });
+</script>
+</html>
